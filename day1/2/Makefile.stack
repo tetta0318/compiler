@@ -1,0 +1,20 @@
+CC = gcc
+
+TARGET = stack
+SRCS = stack.c push.c pop.c
+OBJS = stack.o push.o pop.o
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^
+
+.c.o:
+	$(CC) -c $<
+
+stack.o:
+
+push.o:
+
+pop.o:
+
+clean_all:
+	rm $(TARGET) $(OBJS)

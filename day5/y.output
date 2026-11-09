@@ -1,0 +1,186 @@
+Terminals which are not used
+
+   LBRACE
+   RBRACE
+   COMMA
+   BIT_AND
+   BIT_OR
+   EQ
+   ASSIGN
+   NE
+   GT
+   GE
+   LE
+   LT
+   COLON
+   ADD
+   SUB
+   MUL
+   DIV
+   MOD
+   ADD_ASSIGN
+   SUB_ASSIGN
+   MUL_ASSIGN
+   DIV_ASSIGN
+   MOD_ASSIGN
+   INCREMENT
+   DECREMENT
+   NOT
+   DOT
+   AND
+   OR
+   CR
+   SPACE
+   ENDOFFILE
+   INT_LITERAL
+   DOUBLE_LITERAL
+   IF
+   ELSE
+   ELSIF
+   WHILE
+   FOR
+   RETURN
+   BREAK
+   CONTINUE
+   TRUE
+   FALSE
+   BOOLEAN_T
+   INT_T
+   DOUBLE_T
+   STRING_T
+
+
+Grammar
+
+    0 $accept: translation_unit $end
+
+    1 translation_unit: statement
+
+    2 statement: IDENTIFIER LPAREN RPAREN SEMICOLON
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+LPAREN (258) 2
+RPAREN (259) 2
+LBRACE (260)
+RBRACE (261)
+COMMA (262)
+BIT_AND (263)
+BIT_OR (264)
+EQ (265)
+ASSIGN (266)
+NE (267)
+GT (268)
+GE (269)
+LE (270)
+LT (271)
+SEMICOLON (272) 2
+COLON (273)
+ADD (274)
+SUB (275)
+MUL (276)
+DIV (277)
+MOD (278)
+ADD_ASSIGN (279)
+SUB_ASSIGN (280)
+MUL_ASSIGN (281)
+DIV_ASSIGN (282)
+MOD_ASSIGN (283)
+INCREMENT (284)
+DECREMENT (285)
+NOT (286)
+DOT (287)
+AND (288)
+OR (289)
+CR (290)
+SPACE (291)
+ENDOFFILE (292)
+INT_LITERAL (293)
+DOUBLE_LITERAL (294)
+IDENTIFIER (295) 2
+IF (296)
+ELSE (297)
+ELSIF (298)
+WHILE (299)
+FOR (300)
+RETURN (301)
+BREAK (302)
+CONTINUE (303)
+TRUE (304)
+FALSE (305)
+BOOLEAN_T (306)
+INT_T (307)
+DOUBLE_T (308)
+STRING_T (309)
+
+
+Nonterminals, with rules where they appear
+
+$accept (55)
+    on left: 0
+translation_unit (56)
+    on left: 1, on right: 0
+statement (57)
+    on left: 2, on right: 1
+
+
+state 0
+
+    0 $accept: . translation_unit $end
+
+    IDENTIFIER  shift, and go to state 1
+
+    translation_unit  go to state 2
+    statement         go to state 3
+
+
+state 1
+
+    2 statement: IDENTIFIER . LPAREN RPAREN SEMICOLON
+
+    LPAREN  shift, and go to state 4
+
+
+state 2
+
+    0 $accept: translation_unit . $end
+
+    $end  shift, and go to state 5
+
+
+state 3
+
+    1 translation_unit: statement .
+
+    $default  reduce using rule 1 (translation_unit)
+
+
+state 4
+
+    2 statement: IDENTIFIER LPAREN . RPAREN SEMICOLON
+
+    RPAREN  shift, and go to state 6
+
+
+state 5
+
+    0 $accept: translation_unit $end .
+
+    $default  accept
+
+
+state 6
+
+    2 statement: IDENTIFIER LPAREN RPAREN . SEMICOLON
+
+    SEMICOLON  shift, and go to state 7
+
+
+state 7
+
+    2 statement: IDENTIFIER LPAREN RPAREN SEMICOLON .
+
+    $default  reduce using rule 2 (statement)

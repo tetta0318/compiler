@@ -1,0 +1,22 @@
+CC = gcc
+
+TARGET = hello
+SRC = hello.c
+OBJS = hello.o
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $(OBJS)
+
+.c.o:
+	$(CC) -c $<
+
+clean:
+	rm $(OBJS)
+
+clean_target:
+	rm $(TARGET)
+
+clean_all:
+	rm $(TARGET) $(OBJS)
