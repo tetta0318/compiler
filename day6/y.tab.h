@@ -152,14 +152,16 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 7 "grammer.y"
+#line 8 "grammer.y"
 {
     int iv;
     double dv;
     char *name;
+    Expression* expression;
+    AssignmentOperator aope;
 }
 /* Line 1529 of yacc.c.  */
-#line 163 "y.tab.h"
+#line 165 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

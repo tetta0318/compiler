@@ -96,7 +96,7 @@ in_word_set (register const char *str, register unsigned int len)
 #line 16 "id1.key"
       {"else", 297},
 #line 17 "id1.key"
-      {"elsif",298},
+      {"elsif", 298},
 #line 14 "id1.key"
       {"string", 309},
       {""},

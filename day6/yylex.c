@@ -1,20 +1,21 @@
 #include "yylex.h"
+#include <string.h>
 
 FILE *yyin = NULL;
 static char yytext_buf[1026];
-char *yytext = yytext_buf;  // grammer.y の extern char *yytext と型を合わせる
+char *yytext = yytext_buf; // grammer.y の extern char *yytext と型を合わせる
 YYSTYPE yylval;
 
 size_t n_chars;
 static char *ch_buf_p = NULL;
 
-BUFFER_STATE *create_buffer(FILE *file){
+BUFFER_STATE *create_buffer(FILE *file) {
   BUFFER_STATE *b;
-  b = (BUFFER_STATE *) malloc(sizeof(BUFFER_STATE));
+  b = (BUFFER_STATE *)malloc(sizeof(BUFFER_STATE));
 
-  if(!b){
+  if (!b) {
     printf("[ERROR ] malloc failure in yylex.c:13\n");
-    return NULL; 
+    return NULL;
   }
 
   b->input_file = file;
@@ -23,22 +24,22 @@ BUFFER_STATE *create_buffer(FILE *file){
   return b;
 }
 
-void get_next_buffer(){
+void get_next_buffer() {
   int i;
   int c = '*';
   char buf[BUF_SIZE + 2];
 
-  for(i = 0; i < BUF_SIZE; i++){
+  for (i = 0; i < BUF_SIZE; i++) {
     c = fgetc(yyin);
     buf[i] = (char)c;
-    if(c == EOF){
+    if (c == EOF) {
       break;
     }
   }
   // EOFがあるかbufsizeを超えたらEOFを書き込むようにする
   // 構造体に書き込むと時間がかかるからmemcpyとbufを用いて書く
 
-  if(i == 1024){
+  if (i == 1024) {
     buf[i] = EOF;
     buffer_state->has_next = 1;
   }
@@ -48,15 +49,15 @@ void get_next_buffer(){
   return;
 }
 
-int yylex(){
+int yylex() {
   int kind;
   char *cp, *bp;
   char buf[32];
   STATE state = START;
 
-  if(buffer_state == NULL){
+  if (buffer_state == NULL) {
     buffer_state = create_buffer(yyin);
-    if(!buffer_state){
+    if (!buffer_state) {
       printf("faild create_buffer() in yylex.c:36\n");
       return 0;
     }
@@ -66,33 +67,65 @@ int yylex(){
   cp = ch_buf_p;
   bp = cp;
 
-  while(1){
+  while (1) {
 
-    switch(state){
-      case START:
-      if('1' <= *bp && *bp <= '9') state = VALUE;
-      else if('a' <= *bp && *bp <= 'z') state = CHAR;
-      else if(*bp == '0') state = ZERO;
-      else if(*bp == '+') {state = PLUS; bp++;}
-      else if(*bp == '-') {state = MINUS; bp++;}
-      else if(*bp == '*') {state = TIMES; bp++;}
-      else if(*bp == '/') {state = DIVISION; bp++;}
-      else if(*bp == '%') {state = MODULO; bp++;}
-      else if(*bp == '&') {state = AMPERSAND; bp++;}
-      else if(*bp == '|') {state = PIPE; bp++;}
-      else if(*bp == '=') {state = EQUAL; bp++;}
-      else if(*bp == '!') {state = EXCLAMATION; bp++;}
-      else if(*bp == '>') {state = GREATER; bp++;}
-      else if(*bp == '<') {state = LESS; bp++;}
-      else if(strchr(";(){}", *bp) != NULL) state = SYMBOL;
-      else if(*bp == EOF) state = END_OF_FILE;
-      else state = DEFAULT;
+    switch (state) {
+    case START:
+      if ('1' <= *bp && *bp <= '9')
+        state = VALUE;
+      else if (('a' <= *bp && *bp <= 'z') || ('A' <= *bp && *bp <= 'Z') ||
+               *bp == '_')
+        state = CHAR;
+      else if (*bp == '0')
+        state = ZERO;
+      else if (*bp == '+') {
+        state = PLUS;
+        bp++;
+      } else if (*bp == '-') {
+        state = MINUS;
+        bp++;
+      } else if (*bp == '*') {
+        state = TIMES;
+        bp++;
+      } else if (*bp == '/') {
+        state = DIVISION;
+        bp++;
+      } else if (*bp == '%') {
+        state = MODULO;
+        bp++;
+      } else if (*bp == '&') {
+        state = AMPERSAND;
+        bp++;
+      } else if (*bp == '|') {
+        state = PIPE;
+        bp++;
+      } else if (*bp == '=') {
+        state = EQUAL;
+        bp++;
+      } else if (*bp == '!') {
+        state = EXCLAMATION;
+        bp++;
+      } else if (*bp == '>') {
+        state = GREATER;
+        bp++;
+      } else if (*bp == '<') {
+        state = LESS;
+        bp++;
+      } else if (strchr(",.:;(){}", *bp) != NULL)
+        state = SYMBOL;
+      else if (*bp == EOF)
+        state = END_OF_FILE;
+      else
+        state = DEFAULT;
       break;
 
-      case VALUE:
-      if('0' <= *bp && *bp <= '9'){
+    case VALUE:
+      if ('0' <= *bp && *bp <= '9') {
         bp++;
-      }else{
+      } else if (*bp == '.') {
+        bp++;
+        state = FLAC;
+      } else {
         kind = INT_LITERAL;
         memcpy(buf, cp, (size_t)(bp - cp + 1));
         yylval.iv = atoi(buf);
@@ -100,135 +133,203 @@ int yylex(){
       }
       break;
 
-    
-      case CHAR:{
-      if(('a' <= *bp && *bp <= 'z') || ('A' <= *bp && *bp <= 'Z') || ('0' <= *bp && *bp <= '9') || *bp == '_'){
+    case ZERO:
+      if (*bp == '0') {
         bp++;
-      }else{
+      } else if (*bp == '.') {
+        bp++;
+        state = FLAC;
+      } else {
+        kind = INT_LITERAL;
+        memcpy(buf, cp, (size_t)(bp - cp + 1));
+        yylval.iv = atoi(buf);
+        state = END;
+      }
+      break;
+
+    case FLAC:
+      if ('0' <= *bp && *bp <= '9') {
+        bp++;
+      } else {
+        kind = DOUBLE_LITERAL;
+        memcpy(buf, cp, (size_t)(bp - cp + 1));
+        yylval.dv = atof(buf);
+        state = END;
+      }
+      break;
+
+    case CHAR: {
+      if (('a' <= *bp && *bp <= 'z') || ('A' <= *bp && *bp <= 'Z') ||
+          ('0' <= *bp && *bp <= '9') || *bp == '_') {
+        bp++;
+      } else {
         size_t len = (size_t)(bp - cp);
         memcpy(yytext, cp, len);
         yytext[len] = '\0';
         struct RESERVED_WORD *p = in_word_set(yytext, len);
-        if(p){
+        if (p) {
           kind = p->token_type;
-        }else{
+        } else {
           kind = IDENTIFIER;
-          yylval.name = yytext;
+          yylval.name = strdup(yytext);
         }
         state = END;
       }
       break;
-      }
+    }
 
-      case PLUS:
-      if(*bp == '=') {kind = ADD_ASSIGN; bp++;}
-      else kind = ADD;
+    case PLUS:
+      if (*bp == '=') {
+        kind = ADD_ASSIGN;
+        bp++;
+      } else if (*bp == '+') {
+        kind = INCREMENT;
+        bp++;
+      } else
+        kind = ADD;
       state = END;
       break;
 
-      case MINUS:
-      if(*bp == '=') {kind = SUB_ASSIGN; bp++;}
-      else kind = SUB;
+    case MINUS:
+      if (*bp == '=') {
+        kind = SUB_ASSIGN;
+        bp++;
+      } else if (*bp == '-') {
+        kind = DECREMENT;
+        bp++;
+      } else if ('0' <= *bp && *bp <= '9') {
+        state = VALUE;
+        break;
+      } else
+        kind = SUB;
       state = END;
       break;
 
-      case TIMES:
-      if(*bp == '=') {kind = MUL_ASSIGN; bp++;}
-      else kind = MUL;
+    case TIMES:
+      if (*bp == '=') {
+        kind = MUL_ASSIGN;
+        bp++;
+      } else
+        kind = MUL;
       state = END;
       break;
 
-      case DIVISION:
-      if(*bp == '=') {kind = DIV_ASSIGN; bp++;}
-      else kind = DIV;
+    case DIVISION:
+      if (*bp == '=') {
+        kind = DIV_ASSIGN;
+        bp++;
+      } else
+        kind = DIV;
       state = END;
       break;
 
-      case MODULO:
+    case MODULO:
+      state = END;
+      kind = MOD;
+      break;
+
+    case AMPERSAND:
+      if (*bp == '&') {
+        kind = AND;
+        bp++;
+      } else
+        kind = BIT_AND;
       state = END;
       break;
 
-      case AMPERSAND:
-      if(*bp == '&') {kind = AND; bp++;}
-      else kind = BIT_AND;
+    case PIPE:
+      if (*bp == '|') {
+        kind = OR;
+        bp++;
+      } else
+        kind = BIT_OR;
       state = END;
       break;
 
-      case PIPE:
-      if(*bp == '|') {kind = OR; bp++;}
-      else kind = BIT_OR;
+    case EQUAL:
+      if (*bp == '=') {
+        kind = EQ;
+        bp++;
+      } else
+        kind = ASSIGN;
       state = END;
       break;
 
-      case EQUAL:
-      if(*bp == '=') {kind = EQ; bp++;}
-      else kind = ASSIGN;
+    case EXCLAMATION:
+      if (*bp == '=') {
+        kind = NE;
+        bp++;
+      } else
+        kind = NOT;
       state = END;
       break;
 
-      case EXCLAMATION:
-      if(*bp == '=') {kind = NE; bp++;}
-      else kind = NOT;
+    case GREATER:
+      if (*bp == '=') {
+        kind = GE;
+        bp++;
+      } else
+        kind = GT;
       state = END;
       break;
 
-      case GREATER:
-      if(*bp == '=') {kind = GE; bp++;}
-      else kind = GT;
+    case LESS:
+      if (*bp == '=') {
+        kind = LE;
+        bp++;
+      } else
+        kind = LT;
       state = END;
       break;
 
-      case LESS:
-      if(*bp == '=') {kind = LE; bp++;}
-      else kind = LT;
-      state = END;
-      break;
-
-      case OPERATER:
+    case OPERATER:
       bp++;
       break;
 
-
-      case SYMBOL:
-      if(*bp == ';') kind = SEMICOLON;
-      //else if(*bp == ' ') kind = SPACE;
-      //else if(*bp == '\n') kind = CR;
-      else if(*bp == '(') kind = LPAREN;
-      else if(*bp == ')') kind = RPAREN;
-      else if(*bp == '{') kind = LBRACE;
-      else if(*bp == '}') kind = RBRACE;
+    case SYMBOL:
+      if (*bp == '.')
+        kind = DOT;
+      if (*bp == ',')
+        kind = COMMA;
+      if (*bp == ':')
+        kind = COLON;
+      else if (*bp == ';')
+        kind = SEMICOLON;
+      else if (*bp == '(')
+        kind = LPAREN;
+      else if (*bp == ')')
+        kind = RPAREN;
+      else if (*bp == '{')
+        kind = LBRACE;
+      else if (*bp == '}')
+        kind = RBRACE;
       bp++;
       state = END;
       break;
 
-
-      case END_OF_FILE:
-      if(buffer_state->has_next){
+    case END_OF_FILE:
+      if (buffer_state->has_next) {
         get_next_buffer();
-      }else{
+      } else {
         kind = EOF;
         state = END;
       }
       break;
 
-      case END:
+    case END:
       ch_buf_p = bp;
-      size_t len = (size_t)(bp - cp);
-      memcpy(yytext, cp, len);
-      yytext[len] = '\0';
       return kind;
 
-      case DEFAULT:
+    case DEFAULT:
+      cp++;
       bp++;
-      kind = CR;
-      state = END;
+      state = START;
       break;
-      
 
-      default:
+    default:
       break;
     }
-    //printf("%d, %c\n", state, *bp);
+    // printf("%d, %c\n", state, *bp);
   }
 
   return 0;

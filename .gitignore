@@ -2,3 +2,7 @@
 *.o
 *.so
 *.zip
+
+# nested git repositories
+day4/calc/
+day6/csua/
